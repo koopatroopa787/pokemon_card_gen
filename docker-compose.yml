@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  pokemon-card-gen:
+    build: .
+    container_name: pokemon-card-generator
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount data and checkpoints for persistence
+      - ./data:/app/data
+      - ./checkpoints:/app/checkpoints
+      - ./logs:/app/logs
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    # Uncomment below for GPU support (requires nvidia-docker)
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]

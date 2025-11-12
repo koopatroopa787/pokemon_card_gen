@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokemon Card Generator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎴 Pokemon Card Generator</h1>
+            <p class="subtitle">Generate unique Pokemon cards using AI</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Control Panel -->
+            <div class="control-panel">
+                <div class="card">
+                    <h2>Generation Settings</h2>
+
+                    <div class="form-group">
+                        <label for="numImages">Number of Cards:</label>
+                        <input type="number" id="numImages" min="1" max="16" value="4">
+                        <input type="range" id="numImagesSlider" min="1" max="16" value="4" class="slider">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="seed">Seed (optional):</label>
+                        <input type="number" id="seed" placeholder="Leave empty for random">
+                        <button id="randomSeed" class="btn-secondary">Random Seed</button>
+                    </div>
+
+                    <button id="generateBtn" class="btn-primary">
+                        <span id="btnText">Generate Cards</span>
+                        <div id="btnLoader" class="loader" style="display: none;"></div>
+                    </button>
+
+                    <div class="info-section">
+                        <h3>Model Info</h3>
+                        <div id="modelInfo" class="model-info">
+                            <p>Loading...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gallery -->
+            <div class="gallery-section">
+                <div class="card">
+                    <div class="gallery-header">
+                        <h2>Generated Cards</h2>
+                        <button id="clearGallery" class="btn-secondary btn-small">Clear Gallery</button>
+                    </div>
+                    <div id="gallery" class="gallery">
+                        <div class="placeholder">
+                            <p>🎲 Click "Generate Cards" to create your Pokemon cards!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Built with PyTorch, FastAPI, and ❤️</p>
+        </footer>
+    </div>
+
+    <!-- Image Modal -->
+    <div id="imageModal" class="modal">
+        <span class="close">&times;</span>
+        <img class="modal-content" id="modalImage">
+        <div class="modal-actions">
+            <button id="downloadBtn" class="btn-primary">Download</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
