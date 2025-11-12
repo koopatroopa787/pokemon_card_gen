@@ -36,6 +36,20 @@ checkpoints/*
 !checkpoints/.gitkeep
 logs/*
 !logs/.gitkeep
+examples/output/*
+output/*
+
+# TensorBoard
+runs/
+
+# Test coverage
+.coverage
+htmlcov/
+coverage.xml
+*.cover
+
+# Pytest cache
+.pytest_cache/
 
 # IDEs
 .vscode/
@@ -54,7 +68,10 @@ Thumbs.db
 
 # Jupyter
 .ipynb_checkpoints/
-*.ipynb
+notebooks/*.ipynb
 
 # Misc
 *.log
+
+# Custom config (keep default only)
+config.yaml

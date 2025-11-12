@@ -4,6 +4,7 @@ torchvision>=0.15.0
 Pillow>=10.0.0
 numpy>=1.24.0
 matplotlib>=3.7.0
+scipy>=1.11.0
 
 # API
 fastapi>=0.104.0
@@ -15,8 +16,14 @@ pydantic>=2.0.0
 opencv-python>=4.8.0
 scikit-image>=0.21.0
 
-# Utilities
+# Configuration
+PyYAML>=6.0.1
+
+# Logging & Monitoring
+tensorboard>=2.14.0
 tqdm>=4.66.0
+
+# Utilities
 python-dotenv>=1.0.0
 
 # Optional: For wandb logging (commented out by default)
