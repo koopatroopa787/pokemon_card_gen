@@ -2,12 +2,13 @@
 
 An AI-powered Pokemon card generator using Deep Convolutional Generative Adversarial Networks (DCGAN). Train your own model on Pokemon card images and generate unique cards through a beautiful web interface.
 
-> **NEW**: Now supports the official Pokemon TCG dataset! Download 13,000+ card images automatically from CSV. See [DATASET_GUIDE.md](DATASET_GUIDE.md) for details.
+> **NEW**: Automatically download 13,000+ Pokemon cards from Kaggle with ONE command! See [Quick Start](#quick-start) below.
 
 ## Features
 
 - **DCGAN Model**: Deep Convolutional GAN architecture optimized for 256x256 image generation
-- **Pokemon TCG Dataset Support**: Download and train on 13,000+ official Pokemon cards
+- **Kaggle Dataset Integration**: Automatically download 13,000+ Pokemon cards from Kaggle ⭐ NEW
+- **One-Command Setup**: Complete setup with `bash quick_setup.sh` ⭐ NEW
 - **Metadata Support**: Use card attributes (HP, name, set, type) for enhanced training
 - **REST API**: FastAPI-based backend with comprehensive endpoints
 - **Modern Web UI**: Beautiful, responsive interface for card generation
@@ -15,18 +16,33 @@ An AI-powered Pokemon card generator using Deep Convolutional Generative Adversa
 - **Flexible Generation**: Generate 1-16 cards at once with optional seeding
 - **Docker Support**: Easy deployment with Docker and Docker Compose
 
-## Quick Start
+## 🚀 Quick Start (Recommended)
 
-### Option 1: Use Pokemon TCG Dataset (Recommended)
+### Automated Setup from Kaggle
+
+```bash
+# ONE command to set up everything!
+bash quick_setup.sh
+```
+
+This will:
+1. ✅ Install all dependencies
+2. ✅ Download 13,000+ Pokemon cards from Kaggle
+3. ✅ Prepare images for training
+4. ✅ Create quick-start training script
+
+**First time?** You'll need [Kaggle API credentials](KAGGLE_SETUP.md). It takes 2 minutes to set up.
+
+See [KAGGLE_SETUP.md](KAGGLE_SETUP.md) for detailed Kaggle setup instructions.
+
+### Manual Setup from Kaggle
 
 ```bash
 # 1. Install dependencies
 pip install -r requirements.txt
 
-# 2. Download Pokemon card dataset
-python download_dataset.py pokemon_cards.csv \
-  --output-dir data/pokemon_cards \
-  --prepare-training
+# 2. Download dataset from Kaggle
+python setup_kaggle_dataset.py
 
 # 3. Train the model
 python train_pokemon.py \
@@ -39,9 +55,7 @@ python run_server.py
 # 5. Open http://localhost:8000/ui
 ```
 
-See [DATASET_GUIDE.md](DATASET_GUIDE.md) for complete dataset instructions.
-
-### Option 2: Use Your Own Images
+### Alternative: Use Your Own Images
 
 ```bash
 # 1. Install dependencies
@@ -260,7 +274,8 @@ See `requirements.txt` for full dependency list.
 ## Documentation
 
 - **README.md** (this file) - Quick start and overview
-- **DATASET_GUIDE.md** - Pokemon TCG dataset guide ⭐ NEW
+- **KAGGLE_SETUP.md** - Kaggle dataset setup (recommended) ⭐ NEW
+- **DATASET_GUIDE.md** - Pokemon TCG dataset guide
 - **README_ENHANCED.md** - Complete feature documentation
 - **SETUP.md** - Detailed setup instructions
 - **CONTRIBUTING.md** - Contribution guidelines
