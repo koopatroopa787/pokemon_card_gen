@@ -20,9 +20,19 @@ An AI-powered Pokemon card generator using Deep Convolutional Generative Adversa
 
 ### Automated Setup from Kaggle
 
+**Windows (PowerShell):**
+```powershell
+.\quick_setup.ps1
+```
+
+**Linux/macOS:**
 ```bash
-# ONE command to set up everything!
 bash quick_setup.sh
+```
+
+**Cross-platform (Python - Works Everywhere):**
+```bash
+python quick_setup.py
 ```
 
 This will:

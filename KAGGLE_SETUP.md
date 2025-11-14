@@ -4,8 +4,19 @@ This guide shows you how to automatically download and use the Pokemon cards dat
 
 ## 🚀 One-Command Setup
 
+**Windows (PowerShell):**
+```powershell
+.\quick_setup.ps1
+```
+
+**Linux/macOS:**
 ```bash
 bash quick_setup.sh
+```
+
+**Cross-platform (Python):**
+```bash
+python quick_setup.py
 ```
 
 That's it! This will:
