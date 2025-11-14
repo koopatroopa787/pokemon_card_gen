@@ -2,281 +2,302 @@
 
 An AI-powered Pokemon card generator using Deep Convolutional Generative Adversarial Networks (DCGAN). Train your own model on Pokemon card images and generate unique cards through a beautiful web interface.
 
+> **NEW**: Now supports the official Pokemon TCG dataset! Download 13,000+ card images automatically from CSV. See [DATASET_GUIDE.md](DATASET_GUIDE.md) for details.
+
 ## Features
 
 - **DCGAN Model**: Deep Convolutional GAN architecture optimized for 256x256 image generation
+- **Pokemon TCG Dataset Support**: Download and train on 13,000+ official Pokemon cards
+- **Metadata Support**: Use card attributes (HP, name, set, type) for enhanced training
 - **REST API**: FastAPI-based backend with comprehensive endpoints
 - **Modern Web UI**: Beautiful, responsive interface for card generation
 - **Easy Training**: Simple training pipeline with data augmentation
 - **Flexible Generation**: Generate 1-16 cards at once with optional seeding
 - **Docker Support**: Easy deployment with Docker and Docker Compose
 
+## Quick Start
+
+### Option 1: Use Pokemon TCG Dataset (Recommended)
+
+```bash
+# 1. Install dependencies
+pip install -r requirements.txt
+
+# 2. Download Pokemon card dataset
+python download_dataset.py pokemon_cards.csv \
+  --output-dir data/pokemon_cards \
+  --prepare-training
+
+# 3. Train the model
+python train_pokemon.py \
+  --data_dir data/pokemon_cards/training/train \
+  --num_epochs 100
+
+# 4. Start the API server
+python run_server.py
+
+# 5. Open http://localhost:8000/ui
+```
+
+See [DATASET_GUIDE.md](DATASET_GUIDE.md) for complete dataset instructions.
+
+### Option 2: Use Your Own Images
+
+```bash
+# 1. Install dependencies
+pip install -r requirements.txt
+
+# 2. Organize your images
+mkdir -p data/dataset/cards
+# Add your Pokemon card images to data/dataset/cards/
+
+# 3. Train the model
+python train.py --num_epochs 100 --batch_size 32
+
+# 4. Start the API server
+python run_server.py
+
+# 5. Open http://localhost:8000/ui
+```
+
 ## Project Structure
 
 ```
 pokemon_card_gen/
 ├── model/                  # GAN model architecture
-│   ├── __init__.py
 │   ├── generator.py       # Generator model
 │   └── discriminator.py   # Discriminator model
 ├── api/                   # FastAPI backend
-│   ├── __init__.py
-│   └── main.py           # API endpoints
+│   ├── main.py           # Standard API
+│   └── enhanced_main.py  # API with monitoring
 ├── ui/                    # Web interface
 │   ├── index.html
 │   ├── style.css
 │   └── script.js
+├── utils/                 # Utilities
+│   ├── config.py         # Configuration management
+│   ├── metrics.py        # FID/IS evaluation
+│   ├── data_utils.py     # Data preprocessing
+│   └── pokemon_dataset.py # Pokemon card dataset ⭐ NEW
 ├── data/                  # Data directory
-│   ├── dataset/          # Training images (organized in subdirectories)
-│   └── generated/        # Generated samples during training
+│   ├── dataset/          # Training images
+│   ├── pokemon_cards/    # Downloaded Pokemon cards ⭐ NEW
+│   └── generated/        # Generated samples
 ├── checkpoints/          # Model checkpoints
 ├── logs/                 # Training logs
+├── download_dataset.py   # Dataset downloader ⭐ NEW
 ├── train.py             # Training script
+├── train_pokemon.py     # Pokemon dataset training ⭐ NEW
+├── generate.py          # Batch generation
 ├── requirements.txt     # Python dependencies
 ├── Dockerfile          # Docker configuration
-└── docker-compose.yml  # Docker Compose configuration
+├── docker-compose.yml  # Docker Compose setup
+├── README.md          # This file
+├── DATASET_GUIDE.md   # Pokemon dataset guide ⭐ NEW
+└── README_ENHANCED.md # Complete documentation
 ```
 
-## Quick Start
+## Pokemon TCG Dataset
 
-### Prerequisites
+This project now supports the official Pokemon Trading Card Game dataset with 13,000+ cards!
 
-- Python 3.8+
-- PyTorch 2.0+
-- CUDA (optional, for GPU training)
+### Dataset Features
+- **13,139 unique cards**
+- **High-resolution images** (downloaded automatically)
+- **Rich metadata**: HP, name, set, type, rarity, description
+- **130+ card sets** from across Pokemon TCG history
 
-### Installation
-
-1. **Clone the repository**
+### Quick Dataset Setup
 
 ```bash
-git clone <repository-url>
-cd pokemon_card_gen
+# Download Pokemon cards from CSV
+python download_dataset.py pokemon_cards.csv \
+  --output-dir data/pokemon_cards \
+  --prepare-training
+
+# Train on Pokemon cards
+python train_pokemon.py \
+  --data_dir data/pokemon_cards/training/train \
+  --metadata data/pokemon_cards/metadata/cards.json \
+  --num_epochs 100
 ```
 
-2. **Install dependencies**
+For complete dataset documentation, see [DATASET_GUIDE.md](DATASET_GUIDE.md).
+
+## Training
+
+### Basic Training
 
 ```bash
-pip install -r requirements.txt
+python train.py --num_epochs 100 --batch_size 32
 ```
 
-3. **Prepare your dataset**
-
-Organize your Pokemon card images in subdirectories:
-
-```
-data/dataset/
-└── cards/
-    ├── card1.jpg
-    ├── card2.jpg
-    └── ...
-```
-
-Note: Images will be automatically resized to 256x256 during training.
-
-### Training the Model
-
-Train the GAN model on your dataset:
+### Training with Pokemon Dataset
 
 ```bash
-python train.py --data_dir data/dataset --num_epochs 100 --batch_size 32
+python train_pokemon.py \
+  --data_dir data/pokemon_cards/training/train \
+  --metadata data/pokemon_cards/metadata/cards.json \
+  --num_epochs 100 \
+  --batch_size 32
 ```
 
-Training options:
-- `--data_dir`: Directory containing training images (default: data/dataset)
-- `--output_dir`: Directory to save generated images (default: data/generated)
-- `--checkpoint_dir`: Directory to save checkpoints (default: checkpoints)
-- `--latent_dim`: Dimension of latent noise vector (default: 100)
-- `--img_size`: Size of images (default: 256)
-- `--batch_size`: Batch size for training (default: 32)
-- `--lr`: Learning rate (default: 0.0002)
-- `--num_epochs`: Number of training epochs (default: 100)
-- `--checkpoint`: Path to checkpoint to resume training
-
-**Training Tips:**
-- Start with 100-200 epochs for initial results
-- Monitor the generated samples in `data/generated/`
-- Use GPU for faster training (CUDA will be automatically detected)
-- Larger batch sizes work better with more GPU memory
-
-### Running the API Server
-
-Start the FastAPI server:
+### Training Options
 
 ```bash
-python -m uvicorn api.main:app --host 0.0.0.0 --port 8000
+python train.py \
+  --data_dir data/dataset \
+  --num_epochs 200 \
+  --batch_size 16 \
+  --lr 0.0002 \
+  --img_size 256 \
+  --latent_dim 100
 ```
 
-Or directly:
+### Resume Training
 
 ```bash
-cd api
-python main.py
+python train.py --checkpoint checkpoints/checkpoint_epoch_50.pth
 ```
 
-The API will be available at:
-- API: http://localhost:8000
-- API Docs: http://localhost:8000/docs
-- Web UI: http://localhost:8000/ui
+## Generation
 
-### Using the Web Interface
+### Web UI
 
-1. Open your browser and navigate to http://localhost:8000/ui
-2. Adjust the number of cards to generate (1-16)
-3. Optionally set a seed for reproducible results
-4. Click "Generate Cards"
-5. View, enlarge, and download generated cards
+```bash
+python run_server.py
+# Open http://localhost:8000/ui
+```
+
+### API
+
+```bash
+# Generate 4 cards
+curl -X POST "http://localhost:8000/generate" \
+  -H "Content-Type: application/json" \
+  -d '{"num_images": 4, "seed": 42}'
+```
+
+### Batch Generation (CLI)
+
+```bash
+# Generate 100 cards
+python generate.py \
+  --checkpoint checkpoints/checkpoint_epoch_final.pth \
+  --num-images 100 \
+  --output-dir output/batch1
+```
 
 ## API Endpoints
 
-### `GET /`
-API information and available endpoints
-
-### `GET /info`
-Get model information including:
-- Model loaded status
-- Device (CPU/CUDA)
-- Latent dimension
-- Available checkpoints
-
-### `POST /generate`
-Generate multiple Pokemon cards
-
-**Request Body:**
-```json
-{
-    "num_images": 4,
-    "seed": 42
-}
-```
-
-**Response:**
-```json
-{
-    "success": true,
-    "num_images": 4,
-    "images": ["base64_encoded_image1", "base64_encoded_image2", ...]
-}
-```
-
-### `GET /generate/single`
-Generate a single card and return as PNG image
-
-**Query Parameters:**
-- `seed` (optional): Seed for reproducibility
-
-### `POST /reload`
-Reload the model from the latest checkpoint
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/` | GET | API information |
+| `/info` | GET | Model information |
+| `/generate` | POST | Generate multiple cards |
+| `/generate/single` | GET | Generate single card |
+| `/reload` | POST | Reload model |
+| `/docs` | GET | API documentation |
 
 ## Docker Deployment
-
-### Using Docker
-
-Build and run with Docker:
-
-```bash
-# Build the image
-docker build -t pokemon-card-gen .
-
-# Run the container
-docker run -p 8000:8000 -v $(pwd)/data:/app/data -v $(pwd)/checkpoints:/app/checkpoints pokemon-card-gen
-```
 
 ### Using Docker Compose
 
 ```bash
-# Start all services
 docker-compose up -d
-
-# View logs
-docker-compose logs -f
-
-# Stop services
-docker-compose down
 ```
 
-## Model Architecture
+### Using Docker
 
-### Generator
-- Input: 100-dimensional latent vector
-- Output: 256x256 RGB image
-- Architecture: 7-layer Transposed Convolutional Network
-- Activation: ReLU (hidden layers), Tanh (output)
+```bash
+docker build -t pokemon-card-gen .
+docker run -p 8000:8000 \
+  -v $(pwd)/checkpoints:/app/checkpoints \
+  pokemon-card-gen
+```
 
-### Discriminator
-- Input: 256x256 RGB image
-- Output: Real/Fake probability
-- Architecture: 7-layer Convolutional Network
-- Activation: LeakyReLU (hidden layers), Sigmoid (output)
+## Advanced Features
 
-## Training Details
+### Dataset Validation
 
-- **Loss Function**: Binary Cross Entropy (BCE)
-- **Optimizer**: Adam (lr=0.0002, beta1=0.5)
-- **Data Augmentation**: Random horizontal flip, color jitter
-- **Checkpointing**: Saved every 10 epochs + final model
-- **Visualization**: Generated samples saved every epoch
+```bash
+# Validate images
+python -m utils.data_utils validate --input data/dataset
 
-## Tips for Better Results
+# Get statistics
+python -m utils.data_utils stats --input data/dataset
+```
 
-1. **Dataset Quality**
-   - Use high-quality, consistent images
-   - Minimum 500-1000 images recommended
-   - More data = better results
+### Model Evaluation
 
-2. **Training**
-   - Train for at least 100 epochs
-   - Monitor generated samples to check progress
-   - If mode collapse occurs, reduce learning rate
+```python
+from utils.metrics import GANMetrics
 
-3. **Generation**
-   - Use seed for reproducible results
-   - Generate multiple batches to find best results
-   - Save your favorite seeds for later use
+metrics = GANMetrics(device='cuda')
+fid = metrics.compute_fid(real_images, generated_images)
+print(f"FID: {fid:.2f}")  # Lower is better
+```
 
-## Troubleshooting
+### Configuration
 
-### Model not loading in API
-- Ensure you've trained a model first
-- Check that checkpoints exist in `checkpoints/` directory
-- Verify checkpoint files are not corrupted
+```bash
+# Copy default config
+cp config.default.yaml config.yaml
 
-### Training fails with "No images found"
-- Check that images are in subdirectories under `data/dataset/`
-- Example structure: `data/dataset/cards/*.jpg`
-
-### Out of memory errors
-- Reduce batch size: `--batch_size 16` or `--batch_size 8`
-- Reduce image size: `--img_size 128`
-- Use CPU training if GPU memory is insufficient
-
-### Poor quality results
-- Train for more epochs
-- Increase dataset size
-- Check data quality and consistency
+# Edit config.yaml and train
+python train.py  # Uses config.yaml automatically
+```
 
 ## Requirements
 
-See `requirements.txt` for full dependency list. Key dependencies:
-- PyTorch >= 2.0.0
-- FastAPI >= 0.104.0
-- Pillow >= 10.0.0
-- Uvicorn >= 0.24.0
+- Python 3.8 or higher
+- PyTorch 2.0+
+- 4GB+ RAM (8GB+ recommended)
+- CUDA-capable GPU (optional, but recommended)
 
-## License
+See `requirements.txt` for full dependency list.
 
-This project is open source and available for educational purposes.
+## Documentation
+
+- **README.md** (this file) - Quick start and overview
+- **DATASET_GUIDE.md** - Pokemon TCG dataset guide ⭐ NEW
+- **README_ENHANCED.md** - Complete feature documentation
+- **SETUP.md** - Detailed setup instructions
+- **CONTRIBUTING.md** - Contribution guidelines
+
+## Testing
+
+```bash
+# Run tests
+pytest
+
+# With coverage
+pytest --cov=. --cov-report=html
+```
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments
 
-- Built with PyTorch and FastAPI
-- DCGAN architecture based on Radford et al. (2015)
-- Inspired by the Pokemon Trading Card Game
+- DCGAN architecture based on [Radford et al. (2015)](https://arxiv.org/abs/1511.06434)
+- Built with [PyTorch](https://pytorch.org/) and [FastAPI](https://fastapi.tiangolo.com/)
+- Pokemon cards are © Nintendo/Game Freak/Pokemon Company
+- Dataset integration inspired by [Pokemon TCG](https://pokemontcg.io/)
+
+## Support
+
+- **Issues**: [GitHub Issues](https://github.com/yourusername/pokemon_card_gen/issues)
+- **Documentation**: See docs/ directory
+- **Dataset Help**: See [DATASET_GUIDE.md](DATASET_GUIDE.md)
 
 ---
 
-Built with ❤️ for Pokemon fans and AI enthusiasts
+**Made with ❤️ for Pokemon fans and AI enthusiasts**
+
+If you found this project helpful, please consider giving it a ⭐!
