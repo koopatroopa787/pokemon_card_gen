@@ -182,8 +182,33 @@ h1 {
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.download-section {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(78, 205, 196, 0.3);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.download-section h3 {
+    color: var(--accent-color);
+    margin-bottom: 5px;
+    font-size: 1.2rem;
+}
+
+.download-section .btn-secondary {
+    width: 100%;
+    justify-content: center;
 }
 
 .info-section {
@@ -298,8 +323,13 @@ h1 {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 .modal-content {

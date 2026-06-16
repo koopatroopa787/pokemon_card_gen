@@ -6,6 +6,7 @@ __pycache__/
 .Python
 env/
 venv/
+.venv/
 ENV/
 build/
 develop-eggs/
@@ -28,6 +29,7 @@ wheels/
 *.pt
 
 # Data and outputs
+data
 data/dataset/*
 !data/dataset/.gitkeep
 data/generated/*
@@ -52,6 +54,7 @@ coverage.xml
 .pytest_cache/
 
 # IDEs
+agents.md
 .vscode/
 .idea/
 *.swp
@@ -66,6 +69,10 @@ Thumbs.db
 .env
 .env.local
 
+# Kaggle credentials (NEVER commit these)
+.kaggle/
+kaggle.json
+
 # Jupyter
 .ipynb_checkpoints/
 notebooks/*.ipynb
@@ -75,3 +82,9 @@ notebooks/*.ipynb
 
 # Custom config (keep default only)
 config.yaml
+
+# University/College contribution docs
+DOCUMENTACION_CONTRIBUCION.md
+PR_DESCRIPTION_EN.md
+
+
