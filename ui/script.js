@@ -47,6 +47,9 @@ function setupEventListeners() {
         gallery.innerHTML = '<div class="placeholder"><p>🎲 Click "Generate Cards" to create your Pokemon cards!</p></div>';
     });
 
+    document.getElementById('downloadZipBtn').addEventListener('click', () => downloadBatch('zip'));
+    document.getElementById('downloadGridBtn').addEventListener('click', () => downloadBatch('grid'));
+
     closeModal.addEventListener('click', () => {
         modal.style.display = 'none';
     });
@@ -203,6 +206,36 @@ function downloadModalImage() {
     showNotification('✅ Download started!');
 }
 
+// Batch Download via GET /generate/download
+async function downloadBatch(format) {
+    const numImages = parseInt(numImagesInput.value);
+    const seed = seedInput.value ? `&seed=${parseInt(seedInput.value)}` : '';
+    const formatParam = format === 'grid' ? '&format=grid' : '';
+    const url = `${API_BASE_URL}/generate/download?num_images=${numImages}${seed}${formatParam}`;
+
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.detail || 'Download failed');
+        }
+
+        const blob = await response.blob();
+        const objectUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = objectUrl;
+        link.download = format === 'grid' ? `pokemon_grid_${Date.now()}.png` : `pokemon_cards_${Date.now()}.zip`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(objectUrl);
+
+        showNotification(`✅ ${format === 'grid' ? 'Grid PNG' : 'ZIP'} download started!`);
+    } catch (error) {
+        console.error('Download error:', error);
+        showNotification(`❌ Error: ${error.message}`, true);
+    }
+}
 // Show Notification
 function showNotification(message, isError = false) {
     const notification = document.createElement('div');

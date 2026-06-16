@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pokemon Card Generator</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <div class="container">
         <header>
@@ -35,6 +37,12 @@
                         <span id="btnText">Generate Cards</span>
                         <div id="btnLoader" class="loader" style="display: none;"></div>
                     </button>
+
+                    <div class="download-section">
+                        <h3>Batch Download</h3>
+                        <button id="downloadZipBtn" class="btn-secondary">📦 Download ZIP</button>
+                        <button id="downloadGridBtn" class="btn-secondary">🖼️ Download Grid</button>
+                    </div>
 
                     <div class="info-section">
                         <h3>Model Info</h3>
@@ -77,4 +85,5 @@
 
     <script src="script.js"></script>
 </body>
+
 </html>

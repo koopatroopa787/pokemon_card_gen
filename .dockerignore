@@ -6,6 +6,7 @@ __pycache__/
 .Python
 env/
 venv/
+.venv/
 ENV/
 
 # Data and outputs (will be mounted as volumes)
@@ -32,3 +33,7 @@ Thumbs.db
 *.log
 .env
 README.md
+
+# Kaggle credentials (NEVER include in image)
+.kaggle/
+kaggle.json

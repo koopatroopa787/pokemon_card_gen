@@ -1,6 +1,8 @@
-import os
 import io
+import math
+import os
 import base64
+import zipfile
 from pathlib import Path
 from typing import Optional
 
@@ -42,6 +44,15 @@ DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # Global model variable
 generator = None
+
+
+def _tensor_to_pil(img_tensor) -> Image.Image:
+    """Convert a single image tensor (C, H, W) in [-1, 1] range to a PIL Image."""
+    img_tensor = (img_tensor + 1) / 2
+    img_tensor = torch.clamp(img_tensor, 0, 1)
+    img_np = img_tensor.cpu().permute(1, 2, 0).numpy()
+    img_np = (img_np * 255).astype('uint8')
+    return Image.fromarray(img_np)
 
 
 class GenerateRequest(BaseModel):
@@ -131,24 +142,24 @@ async def get_info():
 @app.post("/generate", tags=["Generation"])
 async def generate_cards(request: GenerateRequest):
     """
-    Generate Pokemon cards
+    Generate Pokemon cards in batch and return them as base64 encoded JSON.
 
     Args:
-        request: Generation parameters including number of images and optional seed
+        request: Generation parameters including number of images and optional seed.
 
     Returns:
-        Base64 encoded images
+        JSON list of base64-encoded PNGs.
     """
-    if generator is None:
-        raise HTTPException(
-            status_code=503,
-            detail="Model not loaded. Please train a model first."
-        )
-
     if request.num_images < 1 or request.num_images > 16:
         raise HTTPException(
             status_code=400,
             detail="Number of images must be between 1 and 16"
+        )
+
+    if generator is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Model not loaded. Please train a model first."
         )
 
     try:
@@ -161,29 +172,101 @@ async def generate_cards(request: GenerateRequest):
             noise = torch.randn(request.num_images, LATENT_DIM, 1, 1, device=DEVICE)
             generated_images = generator(noise)
 
-        # Convert to PIL images and encode as base64
-        images_b64 = []
-        for i in range(request.num_images):
-            # Denormalize from [-1, 1] to [0, 1]
-            img_tensor = (generated_images[i] + 1) / 2
-            img_tensor = torch.clamp(img_tensor, 0, 1)
+        # Convert all tensors to PIL images (reuses shared helper)
+        pil_images = [_tensor_to_pil(generated_images[i]) for i in range(request.num_images)]
 
-            # Convert to PIL Image
-            img_np = img_tensor.cpu().permute(1, 2, 0).numpy()
-            img_np = (img_np * 255).astype('uint8')
-            img_pil = Image.fromarray(img_np)
-
-            # Encode as base64
-            buffer = io.BytesIO()
-            img_pil.save(buffer, format='PNG')
-            img_b64 = base64.b64encode(buffer.getvalue()).decode()
-            images_b64.append(img_b64)
+        # Convert to base64
+        base64_images = []
+        for img in pil_images:
+            buf = io.BytesIO()
+            img.save(buf, format="PNG")
+            base64_str = base64.b64encode(buf.getvalue()).decode("utf-8")
+            base64_images.append(base64_str)
 
         return {
             "success": True,
             "num_images": request.num_images,
-            "images": images_b64
+            "images": base64_images
         }
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error generating images: {str(e)}"
+        )
+
+
+@app.get("/generate/download", tags=["Generation"])
+async def download_cards(num_images: int = 1, seed: Optional[int] = None, format: Optional[str] = None):
+    """
+    Generate Pokemon cards in batch and download them as a file.
+
+    Args:
+        num_images: Number of images to generate (1-16)
+        seed: Optional seed for reproducibility
+        format: Output format. Use ``grid`` to receive a single PNG contact sheet
+                (4 columns, dynamic rows). Omit or pass any other value to receive
+                a ZIP archive containing one PNG per card.
+
+    Returns:
+        - ``application/zip`` StreamingResponse by default (``card_01.png``, …).
+        - ``image/png`` StreamingResponse when ``format=grid``.
+    """
+    if num_images < 1 or num_images > 16:
+        raise HTTPException(
+            status_code=400,
+            detail="Number of images must be between 1 and 16"
+        )
+
+    if generator is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Model not loaded. Please train a model first."
+        )
+
+    try:
+        # Set seed if provided
+        if seed is not None:
+            torch.manual_seed(seed)
+
+        # Generate images
+        with torch.no_grad():
+            noise = torch.randn(num_images, LATENT_DIM, 1, 1, device=DEVICE)
+            generated_images = generator(noise)
+
+        # Convert all tensors to PIL images (reuses shared helper)
+        pil_images = [_tensor_to_pil(generated_images[i]) for i in range(num_images)]
+
+        if format == "grid" and num_images > 1:
+            # --- Feature B: contact-sheet grid PNG ---
+            COLS = 4
+            rows = math.ceil(num_images / COLS)
+            card_w, card_h = pil_images[0].size
+            grid_img = Image.new("RGBA", (COLS * card_w, rows * card_h))
+            for idx, img in enumerate(pil_images):
+                col = idx % COLS
+                row = idx // COLS
+                grid_img.paste(img, (col * card_w, row * card_h))
+
+            buffer = io.BytesIO()
+            grid_img.save(buffer, format="PNG")
+            buffer.seek(0)
+            return StreamingResponse(buffer, media_type="image/png")
+
+        else:
+            # --- Feature A: ZIP archive (default) ---
+            zip_buf = io.BytesIO()
+            with zipfile.ZipFile(zip_buf, "w", zipfile.ZIP_DEFLATED) as zf:
+                for i, img in enumerate(pil_images):
+                    img_buf = io.BytesIO()
+                    img.save(img_buf, format="PNG")
+                    zf.writestr(f"card_{i + 1:02d}.png", img_buf.getvalue())
+            zip_buf.seek(0)
+            return StreamingResponse(
+                zip_buf,
+                media_type="application/zip",
+                headers={"Content-Disposition": 'attachment; filename="cards.zip"'},
+            )
 
     except Exception as e:
         raise HTTPException(
@@ -219,14 +302,8 @@ async def generate_single_card(seed: Optional[int] = None):
             noise = torch.randn(1, LATENT_DIM, 1, 1, device=DEVICE)
             generated_image = generator(noise)[0]
 
-        # Denormalize from [-1, 1] to [0, 1]
-        img_tensor = (generated_image + 1) / 2
-        img_tensor = torch.clamp(img_tensor, 0, 1)
-
-        # Convert to PIL Image
-        img_np = img_tensor.cpu().permute(1, 2, 0).numpy()
-        img_np = (img_np * 255).astype('uint8')
-        img_pil = Image.fromarray(img_np)
+        # Convert tensor to PIL image (reuses shared helper)
+        img_pil = _tensor_to_pil(generated_image)
 
         # Return as streaming response
         buffer = io.BytesIO()

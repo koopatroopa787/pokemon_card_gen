@@ -2,8 +2,11 @@
 Unit tests for API endpoints
 """
 
+import io
 import unittest
+import zipfile
 from fastapi.testclient import TestClient
+from PIL import Image
 import sys
 from pathlib import Path
 
@@ -72,6 +75,36 @@ class TestAPI(unittest.TestCase):
             self.assertIn("num_images", data)
             self.assertIn("images", data)
             self.assertEqual(len(data["images"]), 1)
+
+
+    def test_batch_zip_endpoint(self):
+        """Test batch endpoint returns a valid ZIP archive"""
+        response = self.client.get(
+            "/generate/download?num_images=2"
+        )
+        self.assertIn(response.status_code, [200, 503])
+
+        if response.status_code == 200:
+            self.assertIn("application/zip", response.headers["content-type"])
+            self.assertGreater(len(response.content), 0)
+            with zipfile.ZipFile(io.BytesIO(response.content)) as zf:
+                names = zf.namelist()
+                self.assertEqual(len(names), 2)
+                self.assertIn("card_01.png", names)
+                self.assertIn("card_02.png", names)
+
+    def test_batch_grid_endpoint(self):
+        """Test batch endpoint with format=grid returns a valid PNG image"""
+        response = self.client.get(
+            "/generate/download?num_images=4&format=grid"
+        )
+        self.assertIn(response.status_code, [200, 503])
+
+        if response.status_code == 200:
+            self.assertIn("image/png", response.headers["content-type"])
+            self.assertGreater(len(response.content), 0)
+            img = Image.open(io.BytesIO(response.content))
+            img.verify()
 
 
 if __name__ == '__main__':
