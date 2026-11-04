@@ -1,8 +1,10 @@
 import os
 import io
 import base64
+import math
+import zipfile
 from pathlib import Path
-from typing import Optional
+from typing import Literal, Optional
 
 import torch
 from fastapi import FastAPI, HTTPException
@@ -190,6 +192,41 @@ async def generate_cards(request: GenerateRequest):
             status_code=500,
             detail=f"Error generating images: {str(e)}"
         )
+
+
+@app.get("/generate/download", tags=["Generation"])
+async def download_cards(
+    num_images: int = 1,
+    seed: Optional[int] = None,
+    format: Literal["zip", "grid"] = "zip"
+):
+    """Download generated cards as a ZIP file or a grid PNG."""
+    result = await generate_cards(GenerateRequest(num_images=num_images, seed=seed))
+    images = [base64.b64decode(image) for image in result["images"]]
+    buffer = io.BytesIO()
+
+    if format == "zip":
+        with zipfile.ZipFile(buffer, "w") as archive:
+            for index, image in enumerate(images, start=1):
+                archive.writestr(f"card_{index:02d}.png", image)
+        media_type, filename = "application/zip", "cards.zip"
+    else:
+        cards = [Image.open(io.BytesIO(image)) for image in images]
+        columns = math.ceil(math.sqrt(len(cards)))
+        rows = math.ceil(len(cards) / columns)
+        width, height = cards[0].size
+        grid = Image.new(cards[0].mode, (columns * width, rows * height))
+        for index, card in enumerate(cards):
+            grid.paste(card, ((index % columns) * width, (index // columns) * height))
+        grid.save(buffer, format="PNG")
+        media_type, filename = "image/png", "cards.png"
+
+    buffer.seek(0)
+    return StreamingResponse(
+        buffer,
+        media_type=media_type,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+    )
 
 
 @app.get("/generate/single", tags=["Generation"])
